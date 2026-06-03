@@ -1,65 +1,71 @@
 #include <iostream>
+#include <tuple>
+#include <vector>
+#include <string>
 
-template<typename T>
-struct is_pointer {
-    static constexpr bool value = false;
+template<typename... T>
+struct MyContainer
+{
+    std::tuple<T...> data;    
 };
 
-template<typename T>
-struct is_pointer<T*> {
-    static constexpr bool value = true;
-};
+bool contain(const std::string& search, const std::vector<std::string> v, size_t start_from = 0) {
 
-template<typename T>
-struct strip_pointer {
-    using Type = T;
-};
-
-template<typename T>
-struct strip_pointer<T*> {
-    using Type = T;
-};
-
-template<typename T>
-struct is_int{
-    static constexpr bool value = false;
-};
-
-template<>
-struct is_int<int>{
-    static constexpr bool value = true;
-};
-
-template<typename T>
-void print_func(T val) {
-
-    using T_no_ptr = typename strip_pointer<T>::Type;
-    if constexpr(is_int<T_no_ptr>::value) {
-        std::cout << "INT\n";
-    } else {
-        std::cout << "NOT INT\n";
-    }
-
-    if constexpr(is_pointer<T>::value) {
-        std::cout << "VAL : " << *val << "\n";
-    } else {
-        std::cout << "VAL : " << val << "\n";
+    if(v[start_from] == search) return true;
+    else {
+        if(v.size() - 1 == start_from) return false;
+        else return contain(search, v, start_from + 1);
     }
 }
 
-template<typename T1, typename T2, typename T3, typename T4>
-void example(T1 val1, T2 val2, T3 val3, T4 val4) {
-    print_func(val1);
-    print_func(val2);
-    print_func(val3);
-    print_func(val4);
-}
+template<bool condition, typename THEN, typename ELSE>
+struct if_;
+
+template<typename THEN, typename ELSE>
+struct if_<true, THEN, ELSE> {
+    using type  = THEN;
+};
+
+template<typename THEN, typename ELSE>
+struct if_<false, THEN, ELSE> {
+    using type  = ELSE;
+};
+
+template<typename SEARCH, typename TUPLE, size_t start_from = 0>
+struct contain_type : 
+if_<// IF
+    std::is_same<std::tuple_element_t<start_from, TUPLE>, SEARCH>::value, 
+    // THEN
+    std::true_type, 
+    // ELSE
+    typename if_<
+        // IF
+        (std::tuple_size<TUPLE>::value - 1 == start_from), 
+        // THEN
+        std::false_type, 
+        // ELSE
+        contain_type<SEARCH, TUPLE, start_from + 1>
+    >::type
+>::type {};
 
 int main() {
 
-    int x = 123;
-    float y = 321.0f;
-    example(x, y, &x, &y);
+    std::tuple<float, int, std::string> point_2d(1.0f, 2, "hello");
+    std::cout << std::get<0>(point_2d) << "\n";
+
+    const std::vector<std::string> vec{"int", "bool", "float"};
+    std::cout << std::boolalpha << contain("bool", vec) << "\n";
+    std::cout << std::boolalpha << contain("string", vec) << "\n";
+    
+    std::cout << std::boolalpha << std::is_same<int, if_<(1<2), int, float>::type>::value << "\n";
+    std::cout << std::boolalpha << std::is_same<int, if_<(1>2), int, float>::type>::value << "\n";
+
+    std::cout << std::boolalpha << std::true_type::value << "\n";
+    std::cout << std::boolalpha << std::false_type::value << "\n";
+
+    std::cout << std::boolalpha << contain_type<int, decltype(point_2d)>::value << "\n";
+    std::cout << std::boolalpha << contain_type<double, decltype(point_2d)>::value << "\n";
+
 
     return 0;
 }
