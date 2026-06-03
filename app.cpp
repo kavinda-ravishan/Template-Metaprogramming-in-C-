@@ -48,6 +48,9 @@ if_<// IF
     >::type
 >::type {};
 
+template<typename SEARCH>
+struct contain_type<SEARCH, std::tuple<>, 0> : std::false_type {};
+
 int main() {
 
     std::tuple<float, int, std::string> point_2d(1.0f, 2, "hello");
@@ -65,6 +68,7 @@ int main() {
 
     std::cout << std::boolalpha << contain_type<int, decltype(point_2d)>::value << "\n";
     std::cout << std::boolalpha << contain_type<double, decltype(point_2d)>::value << "\n";
+    std::cout << std::boolalpha << contain_type<double, std::tuple<>>::value << "\n";
 
 
     return 0;
