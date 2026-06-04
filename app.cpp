@@ -3,73 +3,70 @@
 #include <vector>
 #include <string>
 
-template<typename... T>
-struct MyContainer
-{
-    std::tuple<T...> data;    
-};
+// void print_func() {}
 
-bool contain(const std::string& search, const std::vector<std::string> v, size_t start_from = 0) {
+// template<typename THIS>
+// void print_func(THIS _this) {
+//     std::cout << _this << "\n";
+// }
 
-    if(v[start_from] == search) return true;
-    else {
-        if(v.size() - 1 == start_from) return false;
-        else return contain(search, v, start_from + 1);
-    }
+// template<typename THIS, typename... REST>
+// void print_func(THIS _this, REST... _rest) {
+
+//     std::cout << _this << ", ";
+//     print_func(_rest...); // print_func(rest1, rest2, ...)
+// }
+
+// template<typename TUPLE, size_t... index_seqence>
+// void print_tuple_impl(TUPLE t, std::index_sequence<index_seqence...>) {
+//     print_func(std::get<index_seqence>(t)...); // print_func(std::get<0>(t), std::get<1>(t), ...)
+// }
+
+// template<typename TUPLE>
+// void print_tuple(TUPLE t) {
+//     print_tuple_impl(t, std::make_index_sequence<std::tuple_size<TUPLE>::value>{});
+// }
+
+// =========================================
+
+void print_func() {}
+
+template<typename THIS>
+void print_func(THIS&& _this) {
+    std::cout << "Rred -> " << std::forward<THIS>(_this) << "\n";
 }
 
-template<bool condition, typename THEN, typename ELSE>
-struct if_;
+template<typename THIS>
+void print_func(THIS& _this) {
+    std::cout << "Lref -> " << std::forward<THIS>(_this) << "\n";
+}
 
-template<typename THEN, typename ELSE>
-struct if_<true, THEN, ELSE> {
-    using type  = THEN;
-};
+template<typename THIS, typename... REST>
+void print_func(THIS&& _this, REST&&... _rest) {
 
-template<typename THEN, typename ELSE>
-struct if_<false, THEN, ELSE> {
-    using type  = ELSE;
-};
+    std::cout << std::forward<THIS>(_this) << ", ";
+    print_func(std::forward<REST>(_rest)...);
+}
 
-template<typename SEARCH, typename TUPLE, size_t start_from = 0>
-struct contain_type : 
-if_<// IF
-    std::is_same<std::tuple_element_t<start_from, TUPLE>, SEARCH>::value, 
-    // THEN
-    std::true_type, 
-    // ELSE
-    typename if_<
-        // IF
-        (std::tuple_size<TUPLE>::value - 1 == start_from), 
-        // THEN
-        std::false_type, 
-        // ELSE
-        contain_type<SEARCH, TUPLE, start_from + 1>
-    >::type
->::type {};
+template<typename TUPLE, size_t... index_seqence>
+void print_tuple_impl(TUPLE&& t, std::index_sequence<index_seqence...>) {
+    print_func(std::get<index_seqence>(std::forward<TUPLE>(t))...);
+}
 
-template<typename SEARCH>
-struct contain_type<SEARCH, std::tuple<>, 0> : std::false_type {};
+template<typename TUPLE>
+void print_tuple(TUPLE&& t) {
+    print_tuple_impl(std::forward<TUPLE>(t), std::make_index_sequence<std::tuple_size<std::remove_reference<TUPLE>::type>::value>{});
+}
+
+// =========================================
+
 
 int main() {
 
-    std::tuple<float, int, std::string> point_2d(1.0f, 2, "hello");
-    std::cout << std::get<0>(point_2d) << "\n";
+    print_func("hello", 9, false);
 
-    const std::vector<std::string> vec{"int", "bool", "float"};
-    std::cout << std::boolalpha << contain("bool", vec) << "\n";
-    std::cout << std::boolalpha << contain("string", vec) << "\n";
-    
-    std::cout << std::boolalpha << std::is_same<int, if_<(1<2), int, float>::type>::value << "\n";
-    std::cout << std::boolalpha << std::is_same<int, if_<(1>2), int, float>::type>::value << "\n";
-
-    std::cout << std::boolalpha << std::true_type::value << "\n";
-    std::cout << std::boolalpha << std::false_type::value << "\n";
-
-    std::cout << std::boolalpha << contain_type<int, decltype(point_2d)>::value << "\n";
-    std::cout << std::boolalpha << contain_type<double, decltype(point_2d)>::value << "\n";
-    std::cout << std::boolalpha << contain_type<double, std::tuple<>>::value << "\n";
-
+    const std::tuple t = std::make_tuple(1, 1.23f, "world");
+    print_tuple(std::move(t));
 
     return 0;
 }
