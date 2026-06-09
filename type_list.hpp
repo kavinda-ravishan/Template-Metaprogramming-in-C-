@@ -33,8 +33,8 @@ struct type_list {};
 template<typename LIST>
 struct empty: std::false_type {};
 
-template<>
-struct empty<type_list<>>: std::true_type {};
+template<template<typename...> class LIST>
+struct empty<LIST<>>: std::true_type {};
 
 template<typename LIST>
 static constexpr bool empty_v = empty<LIST>::value;
@@ -47,8 +47,8 @@ struct front {};
 template<typename LIST>
 using front_t = typename front<LIST>::type;
 
-template<typename T_THIS, typename... T_REST> // T_REST can be empty
-struct front<type_list<T_THIS, T_REST...>> : has_type<T_THIS> {};
+template<template<typename...> class LIST, typename T_THIS, typename... T_REST> // T_REST can be empty
+struct front<LIST<T_THIS, T_REST...>> : has_type<T_THIS> {};
 
 // ======================================== POP FRONT ========================================
 
@@ -58,8 +58,8 @@ struct pop_front {};
 template<typename LIST>
 using pop_front_t = typename pop_front<LIST>::type;
 
-template<typename T_THIS, typename... T_REST>
-struct pop_front<type_list<T_THIS, T_REST...>> : has_type<type_list<T_REST...>> {};
+template<template<typename...> class LIST, typename T_THIS, typename... T_REST>
+struct pop_front<LIST<T_THIS, T_REST...>> : has_type<type_list<T_REST...>> {};
 
 // ======================================== CONTAINS TYPE ========================================
 
@@ -74,8 +74,8 @@ if_t<
 >
 {};
 
-template<typename SEARCH>
-struct contains_type<SEARCH, type_list<>> : std::false_type {};
+template<template<typename...> class LIST, typename SEARCH>
+struct contains_type<SEARCH, LIST<>> : std::false_type {};
 
 template<typename SEARCH, typename LIST>
 static constexpr bool contains_type_v = contains_type<SEARCH, LIST>::value;
@@ -96,11 +96,11 @@ using at_t = typename at<LIST, index>::type;
 template<typename LIST>
 struct back {};
 
-template<typename T0, typename... T_REST>
-struct back<type_list<T0, T_REST...>> : has_type<typename back<type_list<T_REST...>>::type> {};
+template<template<typename...> class LIST, typename T0, typename... T_REST>
+struct back<LIST<T0, T_REST...>> : has_type<typename back<LIST<T_REST...>>::type> {};
 
-template<typename T>
-struct back<type_list<T>> : has_type<front_t<type_list<T>>> {};
+template<template<typename...> class LIST, typename T>
+struct back<LIST<T>> : has_type<front_t<LIST<T>>> {};
 
 template<typename LIST>
 using back_t = typename back<LIST>::type;
@@ -120,22 +120,32 @@ using back_t = typename back<LIST>::type;
 template<typename LIST, typename T>
 struct push_back {};
 
-template<typename T, typename... TYPES>
-struct push_back<type_list<TYPES...>, T> : has_type<type_list<TYPES..., T>> {};
+template<template<typename...> class LIST, typename T, typename... TYPES>
+struct push_back<LIST<TYPES...>, T> : has_type<LIST<TYPES..., T>> {};
 
 template<typename LIST, typename T>
 using push_back_t = typename push_back<LIST, T>::type;
 
 // ======================================== POP BACK ========================================
 
-template<typename LIST, typename RET_LIST = type_list<>>
+template<typename LIST>
+struct make_empty_list;
+
+template<template<typename...> class LIST, typename... Ts>
+struct make_empty_list<LIST<Ts...>> : has_type<LIST<>> {};
+
+template<typename LIST>
+using make_empty_list_t = typename make_empty_list<LIST>::type;
+
+
+template<typename LIST, typename RET_LIST = typename make_empty_list_t<LIST>>
 struct pop_back {};
 
-template<typename T, typename RET_LIST>
-struct pop_back<type_list<T>, RET_LIST> : has_type<RET_LIST> {};
+template<template<typename...> class LIST, typename T, typename RET_LIST>
+struct pop_back<LIST<T>, RET_LIST> : has_type<RET_LIST> {};
 
-template<typename T0, typename T1, typename... T_REST, typename RET_LIST>
-struct pop_back<type_list<T0, T1, T_REST...>, RET_LIST> : pop_back<type_list<T1, T_REST...>, push_back_t<RET_LIST, T0>> {};
+template<template<typename...> class LIST, typename T0, typename T1, typename... T_REST, typename RET_LIST>
+struct pop_back<LIST<T0, T1, T_REST...>, RET_LIST> : pop_back<LIST<T1, T_REST...>, push_back_t<RET_LIST, T0>> {};
 
 template<typename LIST>
 using pop_back_t = typename pop_back<LIST>::type;
