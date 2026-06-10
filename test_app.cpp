@@ -300,3 +300,27 @@ TEST(MetaProTestSuite, PopBackTest) {
     
     assert(val2);
 }
+
+TEST(MetaProTestSuite, AnyTest) {
+
+    static_assert(
+        any_v<std::is_integral, type_list<int, float, bool>>
+    );
+    static_assert(
+        any_v<std::is_integral, type_list<float, int, bool>>
+    );
+    static_assert(
+        !any_v<std::is_integral, type_list<float, double>>
+    );
+
+    static_assert(
+        any_v<std::is_integral, std::tuple<int, float, bool>>
+    );
+    static_assert(
+        any_v<std::is_integral, std::tuple<float, int, bool>>
+    );
+    static_assert(
+        !any_v<std::is_integral, std::tuple<float, double>>
+    );
+}
+
