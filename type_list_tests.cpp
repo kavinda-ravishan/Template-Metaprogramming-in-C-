@@ -1,6 +1,8 @@
+#include <cassert>
 #include <tuple>
 
 #include "gtest/gtest.h"
+#include "my_mpl.hpp"
 #include "type_list.hpp"
 
 TEST(MetaProTestSuite, IfTest) {
@@ -42,13 +44,13 @@ TEST(MetaProTestSuite, PopFrontTest) {
     static_assert(
         std::is_same_v<
             pop_front_t<std::tuple<int, double, bool>>, 
-            type_list<double, bool>
+            std::tuple<double, bool>
         >);
     
     static_assert(
         !std::is_same_v<
             pop_front_t<std::tuple<int, double, bool>>, 
-            type_list<int, double, bool>
+            std::tuple<int, double, bool>
         >);
 }
 
