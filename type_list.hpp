@@ -160,7 +160,7 @@ struct push_back<LIST<TYPES...>, T> : has_type<LIST<TYPES..., T>> {};
 template<typename LIST, typename T>
 using push_back_t = typename push_back<LIST, T>::type;
 
-// ======================================== POP BACK ========================================
+// ======================================== MAKE EMPTY LIST ========================================
 
 template<typename LIST>
 struct make_empty_list;
@@ -171,6 +171,7 @@ struct make_empty_list<LIST<Ts...>> : has_type<LIST<>> {};
 template<typename LIST>
 using make_empty_list_t = typename make_empty_list<LIST>::type;
 
+// ======================================== POP BACK ========================================
 
 template<typename LIST, typename RET_LIST = typename make_empty_list_t<LIST>>
 struct pop_back;
@@ -183,3 +184,26 @@ struct pop_back<LIST<T0, T1, T_REST...>, RET_LIST> : pop_back<LIST<T1, T_REST...
 
 template<typename LIST>
 using pop_back_t = typename pop_back<LIST>::type;
+
+// ======================================== CAT ========================================
+
+template<typename LIST_1, typename LIST_2, typename RET_LIST = typename make_empty_list_t<LIST_1>>
+struct cat;
+
+template<template<typename...> class LIST_1, template<typename...> class LIST_2, typename RET_LIST>
+struct cat<LIST_1<>, LIST_2<>, RET_LIST> : has_type<RET_LIST> {};
+
+template<template<typename...> class LIST_1, template<typename...> class LIST_2, typename T, typename RET_LIST>
+struct cat<LIST_1<>, LIST_2<T>, RET_LIST> : cat<LIST_1<>, LIST_2<>, push_back_t<RET_LIST, T>> {};
+
+template<template<typename...> class LIST_1, template<typename...> class LIST_2, typename T0, typename T1, typename... T_REST, typename RET_LIST>
+struct cat<LIST_1<>, LIST_2<T0, T1, T_REST...>, RET_LIST> : cat<LIST_1<>, LIST_2<T1, T_REST...>, push_back_t<RET_LIST, T0>> {};
+
+template<template<typename...> class LIST_1 , typename T, typename LIST_2, typename RET_LIST>
+struct cat<LIST_1<T>, LIST_2, RET_LIST> : cat<LIST_1<>, LIST_2, push_back_t<RET_LIST, T>> {};
+
+template<template<typename...> class LIST_1, typename T0, typename T1, typename... T_REST, typename LIST_2, typename RET_LIST>
+struct cat<LIST_1<T0, T1, T_REST...>, LIST_2, RET_LIST> : cat<LIST_1<T1, T_REST...>, LIST_2, push_back_t<RET_LIST, T0>> {};
+
+template<typename LIST_1, typename LIST_2>
+using cat_t = typename cat<LIST_1, LIST_2>::type;

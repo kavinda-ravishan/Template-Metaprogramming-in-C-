@@ -324,3 +324,77 @@ TEST(MetaProTestSuite, AnyTest) {
     );
 }
 
+TEST(MetaProTestSuite, CatTest) {
+
+    static_assert(
+        std::is_same_v<
+            type_list<bool, double, bool, int, float>, 
+            cat_t<type_list<bool, double, bool>, type_list<int, float>>
+        >
+    );
+
+    static_assert(
+        std::is_same_v<
+            type_list<bool, int, float>, 
+            cat_t<type_list<bool>, type_list<int, float>>
+        >
+    );
+
+    static_assert(
+        std::is_same_v<
+            type_list<bool, double, bool, float>, 
+            cat_t<type_list<bool, double, bool>, type_list<float>>
+        >
+    );
+
+    static_assert(
+        std::is_same_v<
+            type_list<int, float>, 
+            cat_t<type_list<>, type_list<int, float>>
+        >
+    );
+
+    static_assert(
+        std::is_same_v<
+            type_list<bool, double, bool>, 
+            cat_t<type_list<bool, double, bool>, type_list<>>
+        >
+    );
+
+    
+    static_assert(
+        std::is_same_v<
+            std::tuple<bool, double, bool, int, float>, 
+            cat_t<std::tuple<bool, double, bool>, std::tuple<int, float>>
+        >
+    );
+
+    static_assert(
+        std::is_same_v<
+            std::tuple<bool, int, float>, 
+            cat_t<std::tuple<bool>, std::tuple<int, float>>
+        >
+    );
+
+    static_assert(
+        std::is_same_v<
+            std::tuple<bool, double, bool, float>, 
+            cat_t<std::tuple<bool, double, bool>, std::tuple<float>>
+        >
+    );
+
+    static_assert(
+        std::is_same_v<
+            std::tuple<int, float>, 
+            cat_t<std::tuple<>, std::tuple<int, float>>
+        >
+    );
+
+    static_assert(
+        std::is_same_v<
+            std::tuple<bool, double, bool>, 
+            cat_t<std::tuple<bool, double, bool>, std::tuple<>>
+        >
+    );
+
+}

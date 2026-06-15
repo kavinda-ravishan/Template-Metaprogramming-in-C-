@@ -27,7 +27,7 @@ enable_testing()
 add_executable(${PROJECT_NAME} app.cpp)
 
 # Add your test executable
-add_executable(${PROJECT_NAME}_test test_app.cpp)
+add_executable(${PROJECT_NAME}_test type_list_tests.cpp)
 
 # Use gtest_main to automatically include a main() entry point
 target_link_libraries(${PROJECT_NAME}_test PRIVATE gtest_main)
