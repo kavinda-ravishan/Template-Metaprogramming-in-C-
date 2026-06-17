@@ -1,203 +1,206 @@
 #pragma once
 #include <type_traits>
 
-// ======================================== HAS TYPE ========================================
 
-template<typename T>
-struct has_type {
-    using type = T;
-};
+namespace my_mpl {
+    // ======================================== HAS TYPE ========================================
 
-// ======================================== IF ========================================
+    template<typename T>
+    struct has_type {
+        using type = T;
+    };
 
-template<bool condition, typename THEN, typename ELSE>
-struct if_;
+    // ======================================== IF ========================================
 
-template<bool condition, typename THEN, typename ELSE>
-using if_t = typename if_<condition, THEN, ELSE>::type;
+    template<bool condition, typename THEN, typename ELSE>
+    struct if_;
 
-template<typename THEN, typename ELSE>
-struct if_<true, THEN, ELSE> : has_type<THEN> {};
+    template<bool condition, typename THEN, typename ELSE>
+    using if_t = typename if_<condition, THEN, ELSE>::type;
 
-template<typename THEN, typename ELSE>
-struct if_<false, THEN, ELSE> : has_type<ELSE> {};
+    template<typename THEN, typename ELSE>
+    struct if_<true, THEN, ELSE> : has_type<THEN> {};
 
-// ======================================== EMPTY ========================================
+    template<typename THEN, typename ELSE>
+    struct if_<false, THEN, ELSE> : has_type<ELSE> {};
 
-template<typename LIST>
-struct empty: std::false_type {};
+    // ======================================== EMPTY ========================================
 
-template<template<typename...> class LIST>
-struct empty<LIST<>>: std::true_type {};
+    template<typename LIST>
+    struct empty: std::false_type {};
 
-template<typename LIST>
-static constexpr bool empty_v = empty<LIST>::value;
+    template<template<typename...> class LIST>
+    struct empty<LIST<>>: std::true_type {};
 
-// ======================================== FRONT ========================================
+    template<typename LIST>
+    static constexpr bool empty_v = empty<LIST>::value;
 
-template<typename LIST>
-struct front;
+    // ======================================== FRONT ========================================
 
-template<typename LIST>
-using front_t = typename front<LIST>::type;
+    template<typename LIST>
+    struct front;
 
-template<template<typename...> class LIST, typename T_THIS, typename... T_REST> // T_REST can be empty
-struct front<LIST<T_THIS, T_REST...>> : has_type<T_THIS> {};
+    template<typename LIST>
+    using front_t = typename front<LIST>::type;
 
-// ======================================== POP FRONT ========================================
+    template<template<typename...> class LIST, typename T_THIS, typename... T_REST> // T_REST can be empty
+    struct front<LIST<T_THIS, T_REST...>> : has_type<T_THIS> {};
 
-template<typename LIST>
-struct pop_front;
+    // ======================================== POP FRONT ========================================
 
-template<typename LIST>
-using pop_front_t = typename pop_front<LIST>::type;
+    template<typename LIST>
+    struct pop_front;
 
-template<template<typename...> class LIST, typename T_THIS, typename... T_REST>
-struct pop_front<LIST<T_THIS, T_REST...>> : has_type<LIST<T_REST...>> {};
+    template<typename LIST>
+    using pop_front_t = typename pop_front<LIST>::type;
 
-// ======================================== ANY ========================================
+    template<template<typename...> class LIST, typename T_THIS, typename... T_REST>
+    struct pop_front<LIST<T_THIS, T_REST...>> : has_type<LIST<T_REST...>> {};
 
-template<template<typename> class PREDICATE, typename LIST>
-struct any;
+    // ======================================== ANY ========================================
 
-template<template<typename> class PREDICATE, template<typename...> class LIST>
-struct any<PREDICATE, LIST<>> : std::false_type {};
+    template<template<typename> class PREDICATE, typename LIST>
+    struct any;
 
-template<template<typename> class PREDICATE, typename LIST>
-struct any :
-if_t<
-    PREDICATE<front_t<LIST>>::value, 
-    std::true_type, 
-    typename any<PREDICATE, pop_front_t<LIST>>
->
-{};
+    template<template<typename> class PREDICATE, template<typename...> class LIST>
+    struct any<PREDICATE, LIST<>> : std::false_type {};
 
-template<template<typename> class PREDICATE, typename LIST>
-static constexpr bool any_v = any<PREDICATE, LIST>::value;
+    template<template<typename> class PREDICATE, typename LIST>
+    struct any :
+    if_t<
+        PREDICATE<front_t<LIST>>::value, 
+        std::true_type, 
+        typename any<PREDICATE, pop_front_t<LIST>>
+    >
+    {};
 
-// ======================================== CONTAINS TYPE ========================================
+    template<template<typename> class PREDICATE, typename LIST>
+    static constexpr bool any_v = any<PREDICATE, LIST>::value;
 
-// ==================== contains type 1 ====================
+    // ======================================== CONTAINS TYPE ========================================
 
-template<typename T>
-struct same_as_pred {
-    template<typename U>
-    struct predicate : std::is_same<T, U> {};
-    
-};
+    // ==================== contains type 1 ====================
 
-template<typename SEARCH, typename LIST>
-static constexpr bool contains_type_v = any_v<same_as_pred<SEARCH>::template predicate, LIST>;
+    template<typename T>
+    struct same_as_pred {
+        template<typename U>
+        struct predicate : std::is_same<T, U> {};
+        
+    };
 
-// ==================== contains type 2 ====================
+    template<typename SEARCH, typename LIST>
+    static constexpr bool contains_type_v = any_v<same_as_pred<SEARCH>::template predicate, LIST>;
 
-// template<typename SEARCH, typename LIST>
-// struct contains_type :
-// if_t<
-//     (std::is_same_v<SEARCH, front_t<LIST>>), 
-//     // THEN
-//     std::true_type, 
-//     // ELSE
-//     contains_type<SEARCH, pop_front_t<LIST>>
-// >
-// {};
+    // ==================== contains type 2 ====================
 
-// template<template<typename...> class LIST, typename SEARCH>
-// struct contains_type<SEARCH, LIST<>> : std::false_type {};
+    // template<typename SEARCH, typename LIST>
+    // struct contains_type :
+    // if_t<
+    //     (std::is_same_v<SEARCH, front_t<LIST>>), 
+    //     // THEN
+    //     std::true_type, 
+    //     // ELSE
+    //     contains_type<SEARCH, pop_front_t<LIST>>
+    // >
+    // {};
 
-// template<typename SEARCH, typename LIST>
-// static constexpr bool contains_type_v = contains_type<SEARCH, LIST>::value;
+    // template<template<typename...> class LIST, typename SEARCH>
+    // struct contains_type<SEARCH, LIST<>> : std::false_type {};
 
-// ======================================== AT ========================================
-template<typename LIST, size_t index>
-struct at : has_type<typename at<pop_front_t<LIST>, index-1>::type> {};
+    // template<typename SEARCH, typename LIST>
+    // static constexpr bool contains_type_v = contains_type<SEARCH, LIST>::value;
 
-template<typename LIST>
-struct at<LIST, 0> : has_type<front_t<LIST>> {};
+    // ======================================== AT ========================================
+    template<typename LIST, size_t index>
+    struct at : has_type<typename at<pop_front_t<LIST>, index-1>::type> {};
 
-template<typename LIST, size_t index>
-using at_t = typename at<LIST, index>::type;
+    template<typename LIST>
+    struct at<LIST, 0> : has_type<front_t<LIST>> {};
 
-// ======================================== BACK ========================================
+    template<typename LIST, size_t index>
+    using at_t = typename at<LIST, index>::type;
 
-// ==================== back 1 ====================
-template<typename LIST>
-struct back;
+    // ======================================== BACK ========================================
 
-template<template<typename...> class LIST, typename T0, typename... T_REST>
-struct back<LIST<T0, T_REST...>> : has_type<typename back<LIST<T_REST...>>::type> {};
+    // ==================== back 1 ====================
+    template<typename LIST>
+    struct back;
 
-template<template<typename...> class LIST, typename T>
-struct back<LIST<T>> : has_type<front_t<LIST<T>>> {};
+    template<template<typename...> class LIST, typename T0, typename... T_REST>
+    struct back<LIST<T0, T_REST...>> : has_type<typename back<LIST<T_REST...>>::type> {};
 
-template<typename LIST>
-using back_t = typename back<LIST>::type;
+    template<template<typename...> class LIST, typename T>
+    struct back<LIST<T>> : has_type<front_t<LIST<T>>> {};
 
-// ==================== back 2 ====================
-// template<typename LIST>
-// struct back : has_type<typename back<pop_front_t<LIST>>::type> {};
+    template<typename LIST>
+    using back_t = typename back<LIST>::type;
 
-// template<template<typename...> class LIST, typename T>
-// struct back<LIST<T>> : has_type<T> {};
+    // ==================== back 2 ====================
+    // template<typename LIST>
+    // struct back : has_type<typename back<pop_front_t<LIST>>::type> {};
 
-// template<typename LIST>
-// using back_t = typename back<LIST>::type;
+    // template<template<typename...> class LIST, typename T>
+    // struct back<LIST<T>> : has_type<T> {};
 
-// ======================================== PUSH BACK ========================================
+    // template<typename LIST>
+    // using back_t = typename back<LIST>::type;
 
-template<typename LIST, typename T>
-struct push_back;
+    // ======================================== PUSH BACK ========================================
 
-template<template<typename...> class LIST, typename T, typename... TYPES>
-struct push_back<LIST<TYPES...>, T> : has_type<LIST<TYPES..., T>> {};
+    template<typename LIST, typename T>
+    struct push_back;
 
-template<typename LIST, typename T>
-using push_back_t = typename push_back<LIST, T>::type;
+    template<template<typename...> class LIST, typename T, typename... TYPES>
+    struct push_back<LIST<TYPES...>, T> : has_type<LIST<TYPES..., T>> {};
 
-// ======================================== MAKE EMPTY LIST ========================================
+    template<typename LIST, typename T>
+    using push_back_t = typename push_back<LIST, T>::type;
 
-template<typename LIST>
-struct make_empty_list;
+    // ======================================== MAKE EMPTY LIST ========================================
 
-template<template<typename...> class LIST, typename... Ts>
-struct make_empty_list<LIST<Ts...>> : has_type<LIST<>> {};
+    template<typename LIST>
+    struct make_empty_list;
 
-template<typename LIST>
-using make_empty_list_t = typename make_empty_list<LIST>::type;
+    template<template<typename...> class LIST, typename... Ts>
+    struct make_empty_list<LIST<Ts...>> : has_type<LIST<>> {};
 
-// ======================================== POP BACK ========================================
+    template<typename LIST>
+    using make_empty_list_t = typename make_empty_list<LIST>::type;
 
-template<typename LIST, typename RET_LIST = typename make_empty_list_t<LIST>>
-struct pop_back;
+    // ======================================== POP BACK ========================================
 
-template<template<typename...> class LIST, typename T, typename RET_LIST>
-struct pop_back<LIST<T>, RET_LIST> : has_type<RET_LIST> {};
+    template<typename LIST, typename RET_LIST = typename make_empty_list_t<LIST>>
+    struct pop_back;
 
-template<template<typename...> class LIST, typename T0, typename T1, typename... T_REST, typename RET_LIST>
-struct pop_back<LIST<T0, T1, T_REST...>, RET_LIST> : pop_back<LIST<T1, T_REST...>, push_back_t<RET_LIST, T0>> {};
+    template<template<typename...> class LIST, typename T, typename RET_LIST>
+    struct pop_back<LIST<T>, RET_LIST> : has_type<RET_LIST> {};
 
-template<typename LIST>
-using pop_back_t = typename pop_back<LIST>::type;
+    template<template<typename...> class LIST, typename T0, typename T1, typename... T_REST, typename RET_LIST>
+    struct pop_back<LIST<T0, T1, T_REST...>, RET_LIST> : pop_back<LIST<T1, T_REST...>, push_back_t<RET_LIST, T0>> {};
 
-// ======================================== CAT ========================================
+    template<typename LIST>
+    using pop_back_t = typename pop_back<LIST>::type;
 
-template<typename LIST_1, typename LIST_2, typename RET_LIST = typename make_empty_list_t<LIST_1>>
-struct cat;
+    // ======================================== CAT ========================================
 
-template<template<typename...> class LIST_1, template<typename...> class LIST_2, typename RET_LIST>
-struct cat<LIST_1<>, LIST_2<>, RET_LIST> : has_type<RET_LIST> {};
+    template<typename LIST_1, typename LIST_2, typename RET_LIST = typename make_empty_list_t<LIST_1>>
+    struct cat;
 
-template<template<typename...> class LIST_1, template<typename...> class LIST_2, typename T, typename RET_LIST>
-struct cat<LIST_1<>, LIST_2<T>, RET_LIST> : cat<LIST_1<>, LIST_2<>, push_back_t<RET_LIST, T>> {};
+    template<template<typename...> class LIST_1, template<typename...> class LIST_2, typename RET_LIST>
+    struct cat<LIST_1<>, LIST_2<>, RET_LIST> : has_type<RET_LIST> {};
 
-template<template<typename...> class LIST_1, template<typename...> class LIST_2, typename T0, typename T1, typename... T_REST, typename RET_LIST>
-struct cat<LIST_1<>, LIST_2<T0, T1, T_REST...>, RET_LIST> : cat<LIST_1<>, LIST_2<T1, T_REST...>, push_back_t<RET_LIST, T0>> {};
+    template<template<typename...> class LIST_1, template<typename...> class LIST_2, typename T, typename RET_LIST>
+    struct cat<LIST_1<>, LIST_2<T>, RET_LIST> : cat<LIST_1<>, LIST_2<>, push_back_t<RET_LIST, T>> {};
 
-template<template<typename...> class LIST_1 , typename T, typename LIST_2, typename RET_LIST>
-struct cat<LIST_1<T>, LIST_2, RET_LIST> : cat<LIST_1<>, LIST_2, push_back_t<RET_LIST, T>> {};
+    template<template<typename...> class LIST_1, template<typename...> class LIST_2, typename T0, typename T1, typename... T_REST, typename RET_LIST>
+    struct cat<LIST_1<>, LIST_2<T0, T1, T_REST...>, RET_LIST> : cat<LIST_1<>, LIST_2<T1, T_REST...>, push_back_t<RET_LIST, T0>> {};
 
-template<template<typename...> class LIST_1, typename T0, typename T1, typename... T_REST, typename LIST_2, typename RET_LIST>
-struct cat<LIST_1<T0, T1, T_REST...>, LIST_2, RET_LIST> : cat<LIST_1<T1, T_REST...>, LIST_2, push_back_t<RET_LIST, T0>> {};
+    template<template<typename...> class LIST_1 , typename T, typename LIST_2, typename RET_LIST>
+    struct cat<LIST_1<T>, LIST_2, RET_LIST> : cat<LIST_1<>, LIST_2, push_back_t<RET_LIST, T>> {};
 
-template<typename LIST_1, typename LIST_2>
-using cat_t = typename cat<LIST_1, LIST_2>::type;
+    template<template<typename...> class LIST_1, typename T0, typename T1, typename... T_REST, typename LIST_2, typename RET_LIST>
+    struct cat<LIST_1<T0, T1, T_REST...>, LIST_2, RET_LIST> : cat<LIST_1<T1, T_REST...>, LIST_2, push_back_t<RET_LIST, T0>> {};
+
+    template<typename LIST_1, typename LIST_2>
+    using cat_t = typename cat<LIST_1, LIST_2>::type;
+} // namespace my_mpl

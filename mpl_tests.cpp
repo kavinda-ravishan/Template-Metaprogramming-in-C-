@@ -5,6 +5,8 @@
 #include "my_mpl.hpp"
 #include "type_list.hpp"
 
+using namespace my_mpl;
+
 TEST(MetaProTestSuite, IfTest) {
     static_assert(std::is_same_v<if_t<true, int, bool>, int>);
     static_assert(std::is_same_v<if_t<false, int, bool>, bool>);
