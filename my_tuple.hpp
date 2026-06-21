@@ -37,15 +37,28 @@ namespace my {
         template<typename TUPLE>
         struct get_impl<0, TUPLE> {
             template<typename T>
-            constexpr static decltype(auto) get(T& t) {
-                return static_cast<TUPLE&>(t).data;
+            constexpr static decltype(auto) get(T&& t) {
+                constexpr bool is_lvalue = std::is_lvalue_reference_v<T>;
+                constexpr bool is_const = std::is_const_v<std::remove_reference_t<T>>;
+
+                using data_t = my_mpl::front_t<TUPLE>;
+
+                if constexpr (is_const && is_lvalue) {
+                    return static_cast<const data_t&>(static_cast<const TUPLE&>(t).data);
+                } else if constexpr (!is_const && is_lvalue) {
+                    return static_cast<data_t&>(static_cast<TUPLE&>(t).data);
+                } else if constexpr (!is_const && !is_lvalue) {
+                    return static_cast<data_t&&>(static_cast<TUPLE&&>(t).data);
+                } else if constexpr (is_const && !is_lvalue) {
+                    return static_cast<const data_t&&>(static_cast<const TUPLE&&>(t).data);
+                }
             }
         };
     } // namespace detail
 
     template<size_t i, typename TUPLE>
-    constexpr decltype(auto) get(TUPLE& tuple) {
-        return detail::get_impl<i, std::remove_cvref_t<TUPLE>>::get(tuple);
+    constexpr decltype(auto) get(TUPLE&& tuple) {
+        return detail::get_impl<i, std::remove_cvref_t<TUPLE>>::get(std::forward<TUPLE>(tuple));
     }
 
 } // namespace my

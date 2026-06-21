@@ -4,6 +4,7 @@
 #include "gtest/gtest.h"
 #include "my_mpl.hpp"
 #include "type_list.hpp"
+#include "my_tuple.hpp"
 
 using namespace my_mpl;
 
@@ -401,4 +402,26 @@ TEST(MetaProTestSuite, CatTest) {
         >
     );
 
+}
+
+TEST(MyTupleTestSuite, GetTest) {
+    auto t1 = my::make_tuple(1, true, 1.5);
+    assert(my::get<0>(t1) == 1);
+    assert(my::get<1>(t1) == true);
+    assert(my::get<2>(t1) == 1.5);
+
+    // my::Tuple<float, bool, int> t2{1.2, false, 23};
+    const my::Tuple t2{1.2, false, 23};
+    assert(my::get<0>(t2) == 1.2);
+    assert(my::get<1>(t2) == false);
+    assert(my::get<2>(t2) == 23);
+
+    assert(my::get<1>(my::Tuple{false, 23, 1.2}) == 23);
+
+    const my::Tuple<int, bool, double>&& t_r_ref = std::forward<const my::Tuple<int, bool, double>>(t1);
+    assert(my::get<0>(t_r_ref) == 1);
+
+    // set
+    my::get<1>(t1) = false;
+    assert(my::get<1>(t1) == false);
 }
