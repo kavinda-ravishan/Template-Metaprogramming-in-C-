@@ -13,8 +13,9 @@ namespace my {
     template<typename T_THIS, typename... T_REST>
     class Tuple<T_THIS, T_REST...> : public Tuple<T_REST...> {
     public:
-        explicit constexpr Tuple(T_THIS el, T_REST... rest)
-        : Tuple<T_REST...>(rest...), data(el) {}
+        template<typename T, typename... Ts>
+        explicit constexpr Tuple(T&& el, Ts&&... rest)
+        : Tuple<T_REST...>(std::forward<Ts>(rest)...), data(std::forward<T>(el)) {}
 
         T_THIS data;
     };
@@ -25,8 +26,8 @@ namespace my {
     Tuple(T_THIS, T_REST...) -> Tuple<std::unwrap_ref_decay_t<T_THIS>, std::unwrap_ref_decay_t<T_REST>...>;
 
     template<typename... T>
-    auto make_tuple(T... elems) {
-        return Tuple<std::unwrap_ref_decay_t<T>...>{elems...};
+    auto make_tuple(T&&... elems) {
+        return Tuple<std::unwrap_ref_decay_t<T>...>{std::forward<T>(elems)...};
     }
 
     // ======================================== GET ========================================

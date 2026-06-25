@@ -5,6 +5,7 @@
 #include "my_mpl.hpp"
 #include "type_list.hpp"
 #include "my_tuple.hpp"
+#include "test_utilities.h"
 
 using namespace my_mpl;
 
@@ -424,4 +425,13 @@ TEST(MyTupleTestSuite, GetTest) {
     // set
     my::get<1>(t1) = false;
     assert(my::get<1>(t1) == false);
+}
+
+TEST(MyTupleTestSuite, NCopies) {
+    my_utils::CopyCounter::reset();
+    my_utils::CopyCounter copy_counter;
+
+    auto t = my::make_tuple(copy_counter);
+
+    assert(1 == copy_counter.stats.n_copies && 1 == copy_counter.stats.n_default_constructs && 0 == copy_counter.stats.n_moves);
 }
