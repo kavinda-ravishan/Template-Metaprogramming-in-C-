@@ -6,11 +6,11 @@ if exist ".\build" (
 
 set BUILD_CONFIG=Debug
 
-cmake -G "Visual Studio 17 2022" -A x64 -S . -B .\build
+cmake -G "Visual Studio 18 2026" -A x64 -S . -B .\build
 cmake --build .\build --config %BUILD_CONFIG%
 
-if exist ".\build\%BUILD_CONFIG%\app.exe" (
-    .\build\%BUILD_CONFIG%\app.exe
+if exist ".\build\%BUILD_CONFIG%\mpl.exe" (
+    .\build\%BUILD_CONFIG%\mpl.exe
 ) else (
     echo "Executable not found."
 )
